@@ -5,6 +5,7 @@ import BlogSuccessAlert from './BlogSuccessAlert';
 
 import { uploadImageAndSaveUrl } from '../utils/DataHandler';
 import JoditEditor from 'jodit-react';
+import Logout from './Logout';
 
 const DeleteIcon = () => (
     <svg
@@ -171,7 +172,13 @@ export default function AddBlog() {
       <div className="flex items-center mt-3 justify-start">
         <IoIosArrowRoundBack  size={20} />
         <span className="font-bold ml-1">Add blog post</span>
+        
+
       </div>
+      <div class="flex justify-end mr-10 items-center">
+        <Logout/>
+      </div>
+
 
 
       <div class="w-full flex h-full  mt-7 mb-5">
