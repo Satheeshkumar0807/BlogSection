@@ -1,24 +1,42 @@
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
+import { db, storage } from './utils/firebase';
 import './App.css';
+import AddBlog from './Components/AddBlog';
+import EditBlog from './Components/EditBlog';
+import {BrowserRouter as Router , Route, Routes } from 'react-router-dom'; 
+import Login from './Components/Login';
+import {auth} from './utils/firebase';
+import ProtectedRoute from './utils/ProtectedRoute';
 
 function App() {
+  
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+
+    <div>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route
+            path="/editblog/:id"
+            element={
+              <ProtectedRoute>
+                <EditBlog />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/addblog"
+            element={
+              <ProtectedRoute>
+                <AddBlog />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Router>
     </div>
+    
   );
 }
 
