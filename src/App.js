@@ -5,8 +5,9 @@ import AddBlog from './Components/AddBlog';
 import EditBlog from './Components/EditBlog';
 import {BrowserRouter as Router , Route, Routes } from 'react-router-dom'; 
 import Login from './Components/Login';
-import {auth} from './utils/firebase';
+import DisplayBlogs from './Components/DisplayBlogs';
 import ProtectedRoute from './utils/ProtectedRoute';
+
 
 function App() {
   
@@ -16,7 +17,7 @@ function App() {
     <div>
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route
             path="/editblog/:id"
             element={
@@ -25,6 +26,12 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route path="/" element={
+            <ProtectedRoute>
+              <DisplayBlogs />
+            </ProtectedRoute>
+            } />
           <Route
             path="/addblog"
             element={

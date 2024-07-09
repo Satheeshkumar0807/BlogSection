@@ -1,0 +1,24 @@
+/* DisplayBlogs.css */
+
+.custom-scrollbar {
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: lightgray transparent; /* For Firefox */
+    
+}
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 1px;
+    height: 1px;
+    width: 1px;
+    height: 1px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(213, 205, 205);
+    border-radius: '50%';
+  }
+  

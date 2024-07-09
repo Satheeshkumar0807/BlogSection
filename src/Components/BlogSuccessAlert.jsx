@@ -15,7 +15,7 @@ const BlogSuccessAlert = ({ show, message,onClose }) => {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded" role="alert">
+    <div className="fixed bottom-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded" role="alert">
       
       <span className="block sm:inline">{message}</span>
       

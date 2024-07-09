@@ -1,11 +1,12 @@
 import React, { useEffect, useState,useMemo, useRef} from 'react';
-import { fetchBlogs , getDocumentById , updateData , updateWithoutImage , deleteDocumentById} from '../utils/DataHandler';
+import {  getDocumentById , updateData , updateWithoutImage , deleteDocumentById} from '../utils/DataHandler';
 
 import { IoIosArrowRoundBack } from 'react-icons/io';
 import JoditEditor from 'jodit-react';
 import BlogSuccessAlert from './BlogSuccessAlert';
 import {useParams} from 'react-router-dom';
-import { type } from '@testing-library/user-event/dist/type';
+
+
 
 export default function EditBlog() {
 
@@ -58,6 +59,7 @@ export default function EditBlog() {
                 const data = await getDocumentById(id).then((data) => {
 
                 console.log(data);
+
                 setBlogData(data);
                 setTitle(data.title);
                 setContent(data.content);
@@ -118,6 +120,20 @@ export default function EditBlog() {
         setShowAllTags(!showAllTags);
     }
 
+    const calculateReadTime = (text) => {
+        const wordsPerMinute = 200; // average reading speed
+        const words = text.split(/\s+/).length;
+        const minutes = Math.ceil(words / wordsPerMinute);
+        return minutes;
+      };
+
+      const stripHtmlTags = (html) => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        return doc.body.textContent || "";
+      };
+      
+
 
     const handleEditBlog = () => {
 
@@ -127,6 +143,14 @@ export default function EditBlog() {
             alert('Please fill in all the fields');
             return;
         }
+        const strippedContent = stripHtmlTags(content);
+        const strippedSummary = stripHtmlTags(summary);
+
+        // Calculate read time
+        const readTime = calculateReadTime(strippedContent+strippedSummary);
+        console.log(strippedContent);
+        console.log(strippedSummary);
+        console.log(readTime);
         if (preview[0]=='h') {
             console.log(title, content, summary, visibility, date, preview, author, blog, tags);
             console.log('Image uploaded');
@@ -139,6 +163,7 @@ export default function EditBlog() {
                 author: author,
                 blog: blog,
                 tags: tags,
+                readTime: readTime,
             }
             updateWithoutImage(id, blogData);
 
@@ -155,6 +180,7 @@ export default function EditBlog() {
                 blog: blog,
                 tags: tags,
                 url: preview,
+                readTime: readTime,
             }
             updateData(id, image, blogData);
             console.log(title, content, summary, visibility, date, preview, author, blog, tags);
@@ -166,12 +192,19 @@ export default function EditBlog() {
         setShowAlert(true);
     }
 
-    const handleDeleteBlog = () => {
-        id = parseInt(id);
-        console.log(id);
-        deleteDocumentById(id);
-        console.log('Delete Blog');
+    const handleCancelBlog = () => {
+        setTitle(blogData.title);
+        setContent(blogData.content);
+        setSummary(blogData.summary);
+        setVisibility(blogData.visibility);
+        setDate(blogData.date);
+        setPreview(blogData.url);
+        setAuthor(blogData.author);
+        setBlog(blogData.blog);
+        setTags(blogData.tags);
     }
+
+    
 
 
 
@@ -181,11 +214,22 @@ export default function EditBlog() {
             {blogData?.title  ? (
                 
                 <div className="w-11/12 h-full flex flex-col justify-start  ml-10">
-                <p>{id}</p>
+            
                 {/* Header */}
-                <div className="flex items-center mt-3 justify-start">
-                  <IoIosArrowRoundBack  size={20} />
-                  <span className="font-bold ml-1">Edit the blog post</span>
+                <div className="flex items-center mt-3 justify-between">
+                    <div className="flex items-center mt-3 justify-start">
+                        <a href="/"><IoIosArrowRoundBack  size={20} /></a>
+                        <span className="font-bold ml-1">Edit the blog post</span>
+                    </div>
+                    {/* Save Section */}
+                    <div class="mt-5 grow  flex justify-end items-center">
+                                <button onClick={handleEditBlog} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Edit</button>
+            
+                                {/* Alert Section */} 
+                                {showAlert && <BlogSuccessAlert show={showAlert} message='Blog edited Successfully..!' onClose={() => setShowAlert(false)} />}
+                                
+                                <button onClick={handleCancelBlog} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">Cancel</button>
+                    </div>
                 </div>
           
           
@@ -389,15 +433,7 @@ export default function EditBlog() {
                               </div>
                                                           
                           </div>
-                          {/* Save Section */}
-                          <div class="mt-5 grow h-28 flex justify-center items-center">
-                              <button onClick={handleEditBlog} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Post a Blog</button>
-          
-                              {/* Alert Section */} 
-                              {showAlert && <BlogSuccessAlert show={showAlert} message='Blog edited Successfully..!' onClose={() => setShowAlert(false)} />}
-                             
-                              <button onClick={handleDeleteBlog} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">Delete Blog</button>
-                          </div>
+                          
           
                       </div>
                   

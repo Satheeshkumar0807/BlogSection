@@ -1,0 +1,33 @@
+/* Tooltip.css */
+
+.tooltip {
+    opacity: 0;
+    transition: opacity 0.3s;
+    visibility: hidden;
+  }
+  
+  .tooltip-right {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .tooltip::before {
+    content: '';
+    position: absolute;
+    border-style: solid;
+  }
+  
+  .tooltip-right::before {
+    left: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 5px 5px 5px 0;
+    border-color: transparent gray transparent transparent;
+  }
+  
+  .tooltip-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  

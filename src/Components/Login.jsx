@@ -16,7 +16,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      navigate('/addblog');
+      navigate('/');
     }
   }, [user, navigate]);
   const changeEmail = (e) => {
@@ -34,7 +34,7 @@ export default function Login() {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             console.log('Signed in successfully');
-            navigate('/addblog');
+            navigate('/');
 
             // Redirect to another page or perform other actions on successful sign-in
           } catch (error) {
@@ -55,7 +55,7 @@ export default function Login() {
         <div class="flex justify-center mt-10">
         <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700 ">
           <div class="p-6 space-y-4 md:space-y-6 sm:p-8 ">
-              <h1 class="text-xl font-bold font-sans  leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+              <h1 class="text-xl text-center font-bold font-sans  leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
                   Sign in to your account
               </h1>
               <form class="space-y-4 md:space-y-6" action="#">

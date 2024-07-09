@@ -2,6 +2,7 @@ import React from 'react';
 import {useRef,useState,useEffect,useMemo} from 'react';
 import { IoIosArrowRoundBack } from "react-icons/io";
 import BlogSuccessAlert from './BlogSuccessAlert';
+import { useNavigate } from 'react-router-dom';
 
 import { uploadImageAndSaveUrl } from '../utils/DataHandler';
 import JoditEditor from 'jodit-react';
@@ -25,7 +26,7 @@ export default function AddBlog() {
 
 
     
-
+    const navigate = useNavigate();
     const config = useMemo(
         () => ({
         readonly: false,
@@ -69,12 +70,31 @@ export default function AddBlog() {
 
     const [showAlert, setShowAlert] = useState(false);
 
+    const calculateReadTime = (text) => {
+        const wordsPerMinute = 200; // average reading speed
+        const words = text.split(/\s+/).length;
+        const minutes = Math.ceil(words / wordsPerMinute);
+        return `${minutes} min read`;
+      };
+
+      const stripHtmlTags = (html) => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        return doc.body.textContent || "";
+      };
+      
+
     const handleAddBlog = async () => {
         if (!title || !content || !summary || !author || !blog || !tags.length || (showDate && !date) || !image){
             alert('Please fill all the fields');
             return;
         }
         // Add blog logic here
+        const strippedContent = stripHtmlTags(content);
+        const strippedSummary = stripHtmlTags(summary);
+
+        // Calculate read time
+        const readTime = calculateReadTime(strippedContent);
         const additionalData = {
             title,
             content,
@@ -84,6 +104,7 @@ export default function AddBlog() {
             author,
             blog,
             tags,
+            readTime,
           };
         const downloadURL  = await uploadImageAndSaveUrl(image, additionalData);
         console.log('Title:', title);
@@ -165,19 +186,43 @@ export default function AddBlog() {
         setShowAllTags(!showAllTags);
     };
 
+    const handleCancel = () => {
+        setTitle('');
+        setContent('');
+        setSummary('');
+        setAuthor('');
+        setBlog('');
+        setTags([]);
+        setInputTag('');
+        setVisibility('public');
+        setDate('');
+        setImage(null);
+        setPreview(null);
+        setShowDate(false);
+        
+    }
+
 
   return (
     <div className="w-11/12 h-full flex flex-col justify-start  ml-10">
       {/* Header */}
-      <div className="flex items-center mt-3 justify-start">
-        <IoIosArrowRoundBack  size={20} />
-        <span className="font-bold ml-1">Add blog post</span>
-        
-
+      
+      <div className="flex items-center mt-3 justify-between">
+                    <div className="flex items-center mt-3 justify-start">
+                        <a href="/"><IoIosArrowRoundBack  size={20} /></a>
+                        <span className="font-bold ml-1">Add blog post</span>
+                    </div>
+                    {/* Save Section */}
+                    <div class="mt-5 grow  flex justify-end items-center">
+                                <button onClick={handleAddBlog} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Post</button>
+            
+                                {/* Alert Section */} 
+                                {showAlert && <BlogSuccessAlert show={showAlert} message='Blog added Successfully..!' onClose={() => setShowAlert(false)} />}
+                                
+                                <button onClick={handleCancel} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">Cancel</button>
+                    </div>
       </div>
-      <div class="flex justify-end mr-10 items-center">
-        <Logout/>
-      </div>
+      
 
 
 
@@ -322,7 +367,7 @@ export default function AddBlog() {
                                 
 
                     <label htmlFor="blog" className="ml-4 mt-4 block text-sm font-medium text-gray-700">Blog</label>
-                    <select id="small" value="" onChange={handleBlogChange} class="block w-11/12 ml-4 p-2 mt-1 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <select id="small" value={blog} onChange={handleBlogChange} class="block w-11/12 ml-4 p-2 mt-1 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                         <option value="">Choose a Blog</option>
                         <option value="news">News</option>
                         <option value="technology">Technology</option>
@@ -382,10 +427,7 @@ export default function AddBlog() {
                 </div>
                 {/* Save Section */}
                 <div class="mt-5 grow h-28 flex justify-center items-center">
-                    <button onClick={handleAddBlog} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Post a Blog</button>
-
-                    {/* Alert Section */} 
-                    {showAlert && <BlogSuccessAlert show={showAlert} message="Blog added Successfully..!" onClose={() => setShowAlert(false)} />}
+                    
                    
                 </div>
 
