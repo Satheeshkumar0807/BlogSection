@@ -1,18 +1,19 @@
 import { storage, db , updateDoc, doc } from './firebase';
 import firebase from 'firebase/compat/app';
 
-
-const getDocumentCount = async () => {
+// Function to get the Blog ID for the next blog
+const getBlogId = async () => {
     try {
-      const snapshot = await db.collection('images').get();
-      return snapshot.size; // returns the number of documents
+      const maxRef = await db.collection('images').orderBy('id', 'desc').limit(1).get();
+      const dataRef = maxRef.docs? maxRef.docs[0] : null;
+      return dataRef? dataRef.data().id : 1;
     } catch (error) {
       console.error('Error getting document count:', error);
       throw error;
     }
   };
 
-
+// Function to update the document with the specified id
   const updateDocumentById = async (id, newData) => {
     try {
       // Ensure that the id is an integer
@@ -41,7 +42,8 @@ const getDocumentCount = async () => {
     }
   };
 
-  const updateData = async (id,image,newData) => {
+  // Function to update the blog with the specified id
+  const updateBlog = async (id,image,newData) => {
 
     new Promise((resolve, reject) => {
         const storageRef = storage.ref();
@@ -57,12 +59,13 @@ const getDocumentCount = async () => {
             },
             async () => {
             try {
-
+                // Get the download URL of the newly updated image
                 const downloadURL = await fileRef.getDownloadURL();
                 newData.url = downloadURL;
                 newData.id = id;
-                const oldblog = await getDocumentById(id);
-                  
+                const oldblog = await getBlogById(id);
+                // If the image is updated then delete the old image
+                if (oldblog.url) {
                 const oldfileRef = storage.refFromURL(oldblog.url);
                     oldfileRef.delete().then(() => {
                     console.log("File Deleted")
@@ -71,6 +74,12 @@ const getDocumentCount = async () => {
                 })
                 await updateDocumentById(id, newData);
                 resolve(downloadURL);
+              }
+              // If the image is not updated then update the document with new data
+              else{
+                await updateDocumentById(id, newData);
+                resolve(downloadURL);
+              }
             } catch (error) {
                 console.error('Error saving to Firestore:', error);
                 reject(error);
@@ -82,16 +91,18 @@ const getDocumentCount = async () => {
     );
   };
 
-
-    const updateWithoutImage = async (id,newData) => {
+  // Function to update the blog with the specified id without image
+  const updateBlogWithoutImage = async (id,newData) => {
         try{
             await updateDocumentById(id, newData);
         }
         catch(error){
             console.error('Error updating to Firestore:', error);
         }
-    }
-  const getDocumentById = async (id) => {
+  }
+
+  // Function to get the blog by the specified id
+  const getBlogById = async (id) => {
     try {
       const querySnapshot = await db.collection('images').where('id', '==', id).get();
       
@@ -109,19 +120,63 @@ const getDocumentCount = async () => {
     }
   };
   
-
-const fetchBlogs = async () => {
+// Function to get all the blogs
+const getBlogs = async () => {
     const res = await db.collection('images').get();
     const blogList = res.docs.map((doc) => doc.data());
     return blogList;
   };
 
-const uploadImageAndSaveUrl = (image, additionalData) => {
-    return new Promise((resolve, reject) => {
+// Function to upload the draft
+const uploadDraft = async (image, additionalData) => {
+  //
+  if (image){
+    const storageRef = storage.ref();
+    const fileRef = storageRef.child(`images/${image.name}`);
+    const uploadTask = fileRef.put(image);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {},
+      (error) => {
+        console.error('Upload error:', error);
+      },
+      async () => {
+        try {
+          const downloadURL = await fileRef.getDownloadURL();
+          await db.collection('images').add({
+            url: downloadURL,
+            id: await getBlogId()+1,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            ...additionalData,
+          });
+          return "Draft Uploaded Successfully..!"
+        } catch (error) {
+          console.error('Error saving to Firestore:', error);
+          return "Error in uploading draft..! Please try again..!"
+        }
+      }
+    );
+  }
+  else{
+    await db.collection('images').add({
+    id: await getBlogId()+1,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    url:"",
+    ...additionalData,
+  })
+    return "Draft Uploaded Successfully..!"
+  ;
+}
+};
+
+// Function to get the upload blog 
+const uploadBlog = async (image, additionalData) => {
+    return new Promise( (resolve, reject) => {
+      if (image){
       const storageRef = storage.ref();
       const fileRef = storageRef.child(`images/${image.name}`);
       const uploadTask = fileRef.put(image);
-  
       uploadTask.on(
         'state_changed',
         (snapshot) => {},
@@ -134,7 +189,7 @@ const uploadImageAndSaveUrl = (image, additionalData) => {
             const downloadURL = await fileRef.getDownloadURL();
             await db.collection('images').add({
               url: downloadURL,
-              id: await getDocumentCount()+1,
+              id: await getBlogId()+1,
               createdAt: firebase.firestore.FieldValue.serverTimestamp(),
               ...additionalData,
             });
@@ -145,10 +200,11 @@ const uploadImageAndSaveUrl = (image, additionalData) => {
           }
         }
       );
+    }
     });
   };
-
-  const deleteDocumentById = async (id) => {
+  // Function to delete the blog with the specified id
+  const deleteBlog = async (id) => {
     try {
       // Step 1: Query the document with the specified id
       const querySnapshot = await db.collection('images').where('id', '==', id).get();
@@ -157,10 +213,10 @@ const uploadImageAndSaveUrl = (image, additionalData) => {
         console.log('No matching documents.');
         return null;
       }
-  
       // Step 2: Delete the document
       const document = querySnapshot.docs[0];
       const docRef = doc(db, 'images', document.id); // Get a reference to the document
+      if (document.data().url!==""){
       const fileRef = storage.refFromURL(document.data().url);
         fileRef.delete().then(() => {
             console.log("File Deleted")
@@ -168,6 +224,7 @@ const uploadImageAndSaveUrl = (image, additionalData) => {
         ).catch((error) => {
             console.log("Error in deleting file")
         })
+      }
 
       await db.collection('images').doc(docRef.id).delete();
   
@@ -178,4 +235,73 @@ const uploadImageAndSaveUrl = (image, additionalData) => {
     }
   }
 
-export  {uploadImageAndSaveUrl, fetchBlogs, getDocumentById, getDocumentCount , updateData , updateWithoutImage , deleteDocumentById};
+  // Function to approve the blog with the specified id
+  const approveBlog = async (id) => {
+    try {
+      // Step 1: Query the document with the specified id
+      const querySnapshot = await db.collection('images').where('id', '==', id).get();
+  
+      if (querySnapshot.empty) {
+        console.log('No matching documents.');
+        return null;
+      }
+  
+      // Step 2: Update the document with new data
+      const document = querySnapshot.docs[0];
+      const docRef = doc(db, 'images', document.id); // Get a reference to the document
+      await updateDoc(docRef, {status: "approved"});
+  
+      console.log('Document approved successfully');
+    } catch (error) {
+      console.error('Error approving document:', error);
+      throw error;
+    }
+  }
+
+  // Function to rework the blog with the specified id
+  const reworkBlog = async (id) => {
+    try {
+      // Step 1: Query the document with the specified id
+      const querySnapshot = await db.collection('images').where('id', '==', id).get();
+  
+      if (querySnapshot.empty) {
+        console.log('No matching documents.');
+        return null;
+      }
+  
+      // Step 2: Update the document with new data
+      const document = querySnapshot.docs[0];
+      const docRef = doc(db, 'images', document.id); // Get a reference to the document
+      await updateDoc(docRef, {status: "rework"});
+  
+      console.log('Document reworked successfully');
+    } catch (error) {
+      console.error('Error reworking document:', error);
+      throw error;
+    }
+  }
+
+  // Function to make the blog pending with the specified id
+  const pendingBlog = async (id) => {
+    try {
+      // Step 1: Query the document with the specified id
+      const querySnapshot = await db.collection('images').where('id', '==', id).get();
+  
+      if (querySnapshot.empty) {
+        console.log('No matching documents.');
+        return null;
+      }
+  
+      // Step 2: Update the document with new data
+      const document = querySnapshot.docs[0];
+      const docRef = doc(db, 'images', document.id); // Get a reference to the document
+      await updateDoc(docRef, {status: "pending"});
+  
+      console.log('Document pending successfully');
+    } catch (error) {
+      console.error('Error pending document:', error);
+      throw error;
+    }
+  }
+
+export  {uploadBlog, getBlogs, getBlogById, getBlogId, updateBlog, updateBlogWithoutImage, deleteBlog, uploadDraft, approveBlog, reworkBlog, pendingBlog};

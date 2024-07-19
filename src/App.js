@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { db, storage } from './utils/firebase';
+import React from 'react';
 import './App.css';
+
+import {BrowserRouter as Router , Route, Routes } from 'react-router-dom'; 
+
+
+import Login from './Components/Login';
 import AddBlog from './Components/AddBlog';
 import EditBlog from './Components/EditBlog';
-import {BrowserRouter as Router , Route, Routes } from 'react-router-dom'; 
-import Login from './Components/Login';
 import DisplayBlogs from './Components/DisplayBlogs';
 import ProtectedRoute from './utils/ProtectedRoute';
-
-
+import EditDraft from './Components/EditDraft';
+import DisplayDrafts from './Components/DisplayDrafts';
+import Filter from './Components/Filter';
 function App() {
   
 
@@ -18,6 +21,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          
           <Route
             path="/editblog/:id"
             element={
@@ -26,6 +30,33 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/editdraft/:id"
+            element={
+              <ProtectedRoute>
+                <EditDraft />
+              </ProtectedRoute>
+            }
+          />  
+
+          <Route
+            path="/editdraft/:id"
+            element={
+              <ProtectedRoute>
+                <EditDraft />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/drafts"
+            element={
+              <ProtectedRoute>
+                <DisplayDrafts/>
+              </ProtectedRoute>
+            }
+          />    
 
           <Route path="/" element={
             <ProtectedRoute>
